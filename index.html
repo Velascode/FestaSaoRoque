@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Caixa São Roque</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background: #fff8dc;
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #c0392b;
+      font-size: 26px;
+    }
+    .resumo, .info, .actions, .log {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .resumo span {
+      display: block;
+    }
+    .tickets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tickets button {
+      padding: 15px;
+      font-size: 18px;
+      background: #ff6347;
+      color: white;
+      border: none;
+      border-radius: 6px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 18px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .actions button {
+      width: 48%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+    }
+    #finalizar { background: #27ae60; }
+    #encerrar { background: #e67e22; }
+    #resetar { background: #c0392b; width: 100%; margin-top: 10px; }
+
+    table {
+      width: 100%;
+      font-size: 14px;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #999;
+    }
+    th, td {
+      padding: 6px;
+      text-align: center;
+    }
+    .log-title {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎉 Caixa Festa São Roque</h1>
+
+<div class="resumo">
+  <span>💰 Caixa Inicial: <strong id="caixaInicial">R$ 0,00</strong></span>
+  <span>📥 Entradas: <strong id="entradas">R$ 0,00</strong></span>
+  <span>📤 Saídas (Troco): <strong id="saidas">R$ 0,00</strong></span>
+  <span>💵 Saldo Atual: <strong id="saldo">R$ 0,00</strong></span>
+</div>
+
+<div class="tickets">
+  <button onclick="addTicket(2.5)">R$ 2,50</button>
+  <button onclick="addTicket(3)">R$ 3,00</button>
+  <button onclick="addTicket(3.5)">R$ 3,50</button>
+  <button onclick="addTicket(5)">R$ 5,00</button>
+  <button onclick="addTicket(6)">R$ 6,00</button>
+  <button onclick="addTicket(7)">R$ 7,00</button>
+  <button onclick="addTicket(10)">R$ 10,00</button>
+  <button onclick="addTicket(12)">R$ 12,00</button>
+</div>
+
+<div class="info">
+  🧾 Total Pedido: <strong id="totalPedido">R$ 0,00</strong><br><br>
+  💰 Valor Recebido:
+  <input type="number" id="valorRecebido" placeholder="Digite o valor pago"><br><br>
+
+  💳 Tipo de Pagamento:<br>
+  <label><input type="radio" name="pagamento" value="Dinheiro"> Dinheiro</label><br>
+  <label><input type="radio" name="pagamento" value="Pix"> Pix</label><br>
+  <label><input type="radio" name="pagamento" value="Crédito"> Crédito</label><br>
+  <label><input type="radio" name="pagamento" value="Débito"> Débito</label><br><br>
+
+  💸 Troco: <strong id="troco">R$ 0,00</strong>
+</div>
+
+<div class="actions">
+  <button id="finalizar" onclick="finalizarVenda()">✅ Finalizar Venda</button>
+  <button id="encerrar" onclick="encerrarFesta()">📦 Encerrar Festa</button>
+  <button id="resetar" onclick="resetarCaixa()">🔁 Resetar Caixa</button>
+</div>
+
+<div class="log">
+  <div class="log-title">📄 Histórico de Vendas:</div>
+  <table id="logVendas">
+    <thead>
+      <tr>
+        <th>Hora</th>
+        <th>Pedido</th>
+        <th>Recebido</th>
+        <th>Troco</th>
+        <th>Tipo</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  let caixaInicial = 0;
+  let totalPedido = 0;
+  let entradas = 0;
+  let saidas = 0;
+  let vendas = [];
+  let ticketCount = {
+  2.5: 0,
+  3: 0,
+  3.5: 0,
+  5: 0,
+  6: 0,
+  7: 0,
+  10: 0,
+  12: 0
+  };
+
+  window.onload = () => {
+    let valor = prompt("Digite o valor inicial do caixa:");
+    caixaInicial = parseFloat(valor) || 0;
+    salvarDados();
+    atualizarCaixa();
+    carregarLog();
+  }
+
+  function formatar(valor) {
+    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+  }
+
+  function addTicket(valor) {
+    totalPedido += valor;
+    ticketCount[valor] += 1;
+    document.getElementById('totalPedido').innerText = formatar(totalPedido);
+  }
+
+  function finalizarVenda() {
+    const recebido = parseFloat(document.getElementById('valorRecebido').value);
+    if (isNaN(recebido) || recebido < totalPedido) {
+      alert('Valor inválido ou menor que o pedido.');
+      return;
+    }
+
+    const tipoPagamento = document.querySelector('input[name="pagamento"]:checked');
+    if (!tipoPagamento) {
+      alert('Selecione a forma de pagamento!');
+      return;
+    }
+
+    const troco = recebido - totalPedido;
+    entradas += recebido;
+    saidas += troco;
+
+    const hora = new Date().toLocaleTimeString();
+    const venda = {
+      hora,
+      pedido: totalPedido,
+      recebido,
+      troco,
+      tipo: tipoPagamento.value
+    };
+    vendas.push(venda);
+    salvarDados();
+    atualizarCaixa();
+    adicionarLog(venda);
+
+    document.getElementById('troco').innerText = formatar(troco);
+    document.getElementById('totalPedido').innerText = 'R$ 0,00';
+    document.getElementById('valorRecebido').value = '';
+    totalPedido = 0;
+    document.querySelectorAll('input[name="pagamento"]').forEach(r => r.checked = false);
+  }
+
+  function encerrarFesta() {
+    const saldo = caixaInicial + entradas - saidas;
+    const sugestao = saldo > 300 ? saldo - 300 : 0;
+
+    gerarPDF(saldo, sugestao);
+  }
+
+  function atualizarCaixa() {
+    const saldo = caixaInicial + entradas - saidas;
+    document.getElementById('caixaInicial').innerText = formatar(caixaInicial);
+    document.getElementById('entradas').innerText = formatar(entradas);
+    document.getElementById('saidas').innerText = formatar(saidas);
+    document.getElementById('saldo').innerText = formatar(saldo);
+  }
+
+  function adicionarLog(venda) {
+    const tbody = document.querySelector('#logVendas tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${venda.hora}</td>
+      <td>${formatar(venda.pedido)}</td>
+      <td>${formatar(venda.recebido)}</td>
+      <td>${formatar(venda.troco)}</td>
+      <td>${venda.tipo}</td>
+    `;
+    tbody.appendChild(row);
+  }
+
+  function salvarDados() {
+    localStorage.setItem('caixaJunina', JSON.stringify({
+      caixaInicial, entradas, saidas, vendas, ticketCount
+    }));
+  }
+
+  function carregarLog() {
+    const dados = JSON.parse(localStorage.getItem('caixaJunina'));
+    if (dados) {
+      caixaInicial = dados.caixaInicial;
+      entradas = dados.entradas;
+      saidas = dados.saidas;
+      vendas = dados.vendas || [];
+      ticketCount = dados.ticketCount || ticketCount;
+      vendas.forEach(adicionarLog);
+      atualizarCaixa();
+    }
+  }
+
+  function resetarCaixa() {
+    if (confirm("Tem certeza que deseja resetar o caixa e apagar todas as vendas?")) {
+      localStorage.removeItem('caixaJunina');
+      location.reload();
+    }
+  }
+
+  async function gerarPDF(saldo, sugestao) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("📄 Relatório Final - Caixa São Roque", 14, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Data/Hora: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Caixa Inicial: ${formatar(caixaInicial)}`, 14, 40);
+    doc.text(`Total de Entradas: ${formatar(entradas)}`, 14, 48);
+    doc.text(`Total de Saídas (Troco): ${formatar(saidas)}`, 14, 56);
+    doc.text(`Saldo Final: ${formatar(saldo)}`, 14, 64);
+    doc.text(`Sugestão de Sangria: ${formatar(sugestao)}`, 14, 72);
+
+    doc.setFontSize(14);
+    doc.text("🧾 Tickets Vendidos:", 14, 85);
+
+    let linha = 95;
+    for (let valor in ticketCount) {
+      const qtd = ticketCount[valor];
+      if (qtd > 0) {
+        doc.text(`• R$ ${parseFloat(valor).toFixed(2)}: ${qtd} unidades`, 20, linha);
+        linha += 8;
+      }
+    }
+
+    doc.setFontSize(14);
+    doc.text("🧾 Log de Vendas:", 14, linha + 10);
+
+    doc.setFontSize(10);
+    let y = linha + 18;
+    vendas.forEach((v, i) => {
+      const linhaVenda = `${v.hora} | Pedido: ${formatar(v.pedido)} | Recebido: ${formatar(v.recebido)} | Troco: ${formatar(v.troco)} | Tipo: ${v.tipo}`;
+      doc.text(linhaVenda, 14, y);
+      y += 6;
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("relatorio_caixa.pdf");
+  }
+</script>
+
+</body>
+</html>
