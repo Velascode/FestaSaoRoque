@@ -33,11 +33,18 @@
     .tickets button {
       padding: 15px;
       font-size: 18px;
-      background: #ff6347;
       color: white;
       border: none;
       border-radius: 6px;
     }
+    .amarelo { background: #ffe066 !important; color: #333 !important; }
+    .marrom { background: #a0522d !important; color: #fff !important; }
+    .cinza { background: #b0b0b0 !important; color: #333 !important; }
+    .azul { background: #3498db !important; color: #fff !important; }
+    .vermelho { background: #e74c3c !important; color: #fff !important; }
+    .verde { background: #27ae60 !important; color: #fff !important; }
+    .purple { background: #8e44ad !important; color: #fff !important; }
+    .preto { background: #222 !important; color: #fff !important; }
     input[type="number"] {
       width: 100%;
       padding: 10px;
@@ -88,18 +95,30 @@
 </div>
 
 <div class="tickets">
-  <button onclick="addTicket(2.5)">R$ 2,50</button>
-  <button onclick="addTicket(3)">R$ 3,00</button>
-  <button onclick="addTicket(3.5)">R$ 3,50</button>
-  <button onclick="addTicket(5)">R$ 5,00</button>
-  <button onclick="addTicket(6)">R$ 6,00</button>
-  <button onclick="addTicket(7)">R$ 7,00</button>
-  <button onclick="addTicket(10)">R$ 10,00</button>
-  <button onclick="addTicket(12)">R$ 12,00</button>
+  <button class="amarelo" onclick="addTicket(2.5)">Garavita</br>R$ 2,50</button>
+  <button class="marrom" onclick="addTicket(3)">Água sem Gás</br>R$ 3,00</button> 
+  <button class="cinza" onclick="addTicket(3.5)">Água com Gás</br>R$ 3,50</button>
+  <button class="cinza" onclick="addTicket(3.5)">Mini Coca</br>R$ 3,50</button>
+  <button class="azul" onclick="addTicket(5)">Gluseimas</br>R$ 5,00</button>
+  <button class="vermelho" onclick="addTicket(6)">Doces</br>R$ 6,00</button>
+  <button class="vermelho" onclick="addTicket(6)">Batata Frita</br>R$ 6,00</button>
+  <button class="vermelho" onclick="addTicket(6)">CapiFruta</br>R$ 6,00</button>
+  <button class="vermelho" onclick="addTicket(6)">H2O</br>R$ 6,00</button>
+  <button class="vermelho" onclick="addTicket(6)">Refrigerante</br>R$ 6,00</button>
+  <button class="verde" onclick="addTicket(7)">Salsichão</br>R$ 7,00</button>
+  <button class="verde" onclick="addTicket(7)">Pastel</br>R$ 7,00</button>
+  <button class="verde" onclick="addTicket(7)">Pizza</br>R$ 7,00</button>
+  <button class="purple" onclick="addTicket(10)">Cachorro Quente</br>R$ 10,00</button>
+  <button class="purple" onclick="addTicket(10)">Caldo Verde</br>R$ 10,00</button>
+  <button class="purple" onclick="addTicket(10)">Hambúrguer</br>R$ 10,00</button>
+  <button class="purple" onclick="addTicket(10)">Churrasco</br>R$ 10,00</button>
+  <button class="preto" onclick="addTicket(12)">R$ 12,00</button>
 </div>
 
 <div class="info">
-  🧾 Total Pedido: <strong id="totalPedido">R$ 0,00</strong><br><br>
+  🧾 Total Pedido: <strong id="totalPedido">R$ 0,00</strong>
+  <button id="resetPedido" onclick="resetarPedido()" style="margin-left:10px; background:#c0392b; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:14px;">Resetar Pedido</button>
+  <br><br>
   💰 Valor Recebido:
   <input type="number" id="valorRecebido" placeholder="Digite o valor pago"><br><br>
 
@@ -258,6 +277,11 @@
       localStorage.removeItem('caixaJunina');
       location.reload();
     }
+  }
+
+  function resetarPedido() {
+    totalPedido = 0;
+    document.getElementById('totalPedido').innerText = 'R$ 0,00';
   }
 
   async function gerarPDF(saldo, sugestao) {
